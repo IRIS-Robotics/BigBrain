@@ -1,4 +1,4 @@
-from tokenizer import TOKENIZE
+from src.tokenizer import TOKENIZE
 from src.word2vec import Word2Vec
 from big_brain.bb_graph import BBGraph
 
