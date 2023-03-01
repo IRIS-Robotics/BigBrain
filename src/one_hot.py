@@ -1,29 +1,45 @@
 class OneHot:
 
-    def __init__(self, all_sentences, all_words):
+    def __init__(self, all_words):
+        '''
+        all_sentences: list of lists of words
+        all_words: list of words
+        '''
 
-        self.tokenize_matrix = []
-        self.all_sentences = all_sentences
+        self.onehot_dict = None
+        self.onehot_matrix = []
         self.all_words = all_words
 
     def encode(self):
 
-        words_occ = {}
+        word_dict = {}
+        for word in self.all_words:
+            if word not in word_dict:
+                word_dict[word] = 1
 
-        for sentence in self.all_sentences:
-            # print(sentence)
-            for i, word in enumerate(self.all_words):
-                if word in sentence:
-                    if word not in words_occ:
-                        words_occ[i] = i
+        for word in self.all_words:
+            onehot_word = []
+            for key in word_dict:
+                if key == word:
+                    onehot_word.append(1)
                 else:
-                    words_occ[i] = 0
+                    onehot_word.append(0)
+            self.onehot_matrix.append(onehot_word)
 
-            occurences = list(words_occ.values())
+        self.onehot_dict = {}
+        for i in range(len(self.onehot_matrix)):
+            self.onehot_dict[self.all_words[i]] = self.onehot_matrix[i]
 
-            self.tokenize_matrix.append(occurences)
-            words_occ.clear()
+        return self.onehot_matrix, self.onehot_dict
 
-        print(self.tokenize_matrix)
 
-        return self.tokenize_matrix
+
+
+if __name__ == '__main__':
+
+    all_words = ['the', 'cat', 'sat', 'on', 'the', 'mat']
+
+    one_hot = OneHot(all_words)
+    one_hot.encode()
+    print(one_hot.onehot_matrix)
+    print(one_hot.onehot_dict)

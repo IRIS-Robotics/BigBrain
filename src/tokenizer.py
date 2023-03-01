@@ -176,7 +176,7 @@ if __name__ == '__main__':
     lemmer = IrisLemmer()
     res3 = lemmer.lemmer(res3)
 
-    print(res3) # word list with preprocessing applied
+    print(f"filtered words: ", res3) # word list with preprocessing applied
 
 
     for sent in res:

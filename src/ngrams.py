@@ -27,11 +27,23 @@ class Ngram:
 
         return self.data_points
 
+    def get_context_words(self, index):
+        context_words = []
+        for tpl in self.data_points:
+            if tpl[0] == self.words[index]:
+                for i in range(1, len(tpl)):
+                    if tpl[i] not in context_words:
+                        context_words.append(tpl[i])
+        return context_words
+
+
+
+
 
 if __name__ == '__main__':
 
     wrds = ["The", "future", "king", "is", "the", "prince"]
-    ngram = Ngram(wrds, 4)
+    ngram = Ngram(wrds, 3)
 
     tples = ngram.context()
 
@@ -39,3 +51,5 @@ if __name__ == '__main__':
         print(wrd)
 
     print(len(tples))
+
+    print(ngram.get_context_words(2))
