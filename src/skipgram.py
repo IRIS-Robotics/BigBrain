@@ -25,6 +25,9 @@ class SkipGram:
         self.tokenize = TOKENIZE(self.corpus)
         self.tokenize_matrix, self.filtred_corpus = self.tokenize.show_sentences()
 
+        # remove the duplicates
+        self.filtred_corpus = list(dict.fromkeys(self.filtred_corpus))
+
         self.corpus_size = len(self.filtred_corpus)
         print(f"Corpus size: {self.corpus_size}")
 
@@ -32,7 +35,7 @@ class SkipGram:
         # random initialization of the weights
         self.output = np.zeros((self.corpus_size, self.embdding_size))
         self.weights = np.random.rand(self.corpus_size, self.embdding_size)
-        self.biases = np.zeros((1, self.corpus_size))
+        self.biases = np.zeros(self.corpus_size)
 
         self.onehot_dict = None
 
@@ -41,7 +44,9 @@ class SkipGram:
         one_hot = OneHot(self.filtred_corpus)
         encoded_words, self.onehot_dict = one_hot.encode()
         for epoch in range(epochs):
+            print("==================================================")
             print(f"IRIS NLP Training {epoch + 1}/{epochs} epochs")
+            print("==================================================")
             self.forward_propagation()
 
 
@@ -51,15 +56,21 @@ class SkipGram:
         return e_x / e_x.sum(axis=0)
 
     def crossentropy_loss(self, softmax_output, target_vec):
+        # Compute the cross-entropy loss
+        loss = -np.sum(target_vec * np.log(softmax_output.T))
 
-        # compute the crossentropy loss
-        loss = - np.sum(target_vec * np.log(softmax_output))
-        # compute the softmax gradient
-        softmax_grad = softmax_output - target_vec
+        # Compute the gradient of the cross-entropy loss with respect to the softmax output
+        grad = softmax_output.T - target_vec
 
-        return loss, softmax_grad
+        # Compute the gradient of the loss with respect to the weights
+        grad_weights = np.dot(target_vec.T, grad)
+        grad_biases = np.mean(grad, axis=1)
 
+        # Update the weights and biases
+        self.weights -= self.alpha * grad_weights
+        self.biases -= self.alpha * grad_biases
 
+        return loss, grad
 
     def forward_propagation(self):
 
@@ -72,30 +83,38 @@ class SkipGram:
                 continue
 
             context_words = ngram.get_context_words(i)
-            print(f"Target word: {target_word} | Context words: {context_words}")
+            # print(f"Target word: {target_word} | Context words: {context_words}")
             # iterate over the context words for the target word
             for context_word in context_words:
 
-
+                # encoded context
                 encoded_word = np.array(self.onehot_dict[context_word])
-                print(f"Encoded word: {encoded_word} | Len: {len(encoded_word)}")
+                encoded_word = encoded_word.reshape(encoded_word.shape[0], 1)
                 output = np.dot(self.weights.T, encoded_word) + self.biases
+                softmax_output = self.softmax(output)
 
+                # print("Softmax output: ", softmax_output)
+                # print("Encoded word: ", encoded_word)
 
-
-
+                loss, softmax_grad = self.crossentropy_loss(softmax_output, encoded_word)
+                print(f"Loss: {loss}")
 
 
     def predict(self, word):
         # compute the output
-        output = np.dot(self.weights.T, self.onehot_dict[word]) + self.biases
+        encoded_word = np.array(self.onehot_dict[word])
+        encoded_word = encoded_word.reshape(encoded_word.shape[0], 1)
+        output = np.dot(self.weights.T, encoded_word) + self.biases
         # compute the softmax
         softmax_output = self.softmax(output)
-        # get the index of the word with the highest probability
-        index = np.argmax(softmax_output)
-        # return the word with the highest probability
-        print(f"Predicted word: {self.filtred_corpus[index]}")
-        return self.filtred_corpus[index]
+
+        # get the index of the max value
+        index = np.argmax(softmax_output, axis=1)
+        # get key into list of keys
+        print(f"Index: {index}")
+        print(f"Word: {self.filtred_corpus[index[0]]}")
+
+        return self.filtred_corpus[index[0]]
 
 
     def get_tokenized_matrix(self):
@@ -114,16 +133,16 @@ class SkipGram:
 
 if __name__ == '__main__':
 
-    skipgram = SkipGram(window_size=5, embdding_size=15, alpha=0.01, corpus_path="../assets/corpus/asian/asian.txt")
-    print(skipgram.get_tokenized_matrix())
-    print(skipgram.get_filtred_corpus())
-    print(skipgram.get_weights())
-    print(skipgram.get_biases())
+    skipgram = SkipGram(window_size=5, embdding_size=5, alpha=0.01, corpus_path="../assets/corpus/asian/asian.txt")
+    # print(skipgram.get_tokenized_matrix())
+    # print(skipgram.get_filtred_corpus())
+    # print(skipgram.get_weights())
+    # print(skipgram.get_biases())
 
-    skipgram.train(15)
-    print(skipgram.get_weights())
-    print(skipgram.get_biases())
-    # skipgram.predict("asiatique")
+    skipgram.train(5)
+    # print(skipgram.get_weights())
+    # print(skipgram.get_biases())
+    skipgram.predict("femme")
 
 
 
